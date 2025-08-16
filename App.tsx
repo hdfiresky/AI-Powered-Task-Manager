@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import useLocalStorage from './hooks/useLocalStorage';
 import { Task, TaskStatus, TaskPriority, AISubTaskSuggestion } from './types';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [currentTaskForAI, setCurrentTaskForAI] = useState<{ title: string; description?: string; dueDate?: string; } | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  // --- REMOVE FOR BACKEND INTEGRATION: START ---
   const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
 
   useEffect(() => {
@@ -26,6 +28,7 @@ const App: React.FC = () => {
       setIsApiKeyMissing(true);
     }
   }, []);
+  // --- REMOVE FOR BACKEND INTEGRATION: END ---
 
   const handleOpenTaskForm = (task?: Task) => {
     setEditingTask(task || null);
@@ -61,12 +64,14 @@ const App: React.FC = () => {
   };
   
   const handleTriggerAIBreakdown = async (title: string, description?: string, dueDate?: string) => {
+    // --- REMOVE FOR BACKEND INTEGRATION: START ---
     if (isApiKeyMissing) {
         setAiError("Gemini API key is not configured. AI features are unavailable. Please set the API_KEY environment variable (e.g. in index.html for this demo).");
         setAiSubTaskSuggestions([]);
         setIsAISuggestionsModalOpen(true);
         return;
     }
+    // --- REMOVE FOR BACKEND INTEGRATION: END ---
     setCurrentTaskForAI({ title, description, dueDate });
     setIsLoadingAI(true);
     setAiError(null);
@@ -109,6 +114,7 @@ const App: React.FC = () => {
       <Header appName={APP_NAME} onAddTask={() => handleOpenTaskForm()} />
       
       <main className="flex-grow p-4 md:p-6 lg:p-8">
+        {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
         {isApiKeyMissing && (
              <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md flex items-start shadow">
                 <ExclamationTriangleIcon className="h-6 w-6 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
@@ -122,6 +128,7 @@ const App: React.FC = () => {
                 </div>
             </div>
         )}
+        {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {TASK_STATUSES.map(status => (
             <TaskColumn
@@ -144,7 +151,9 @@ const App: React.FC = () => {
           onSave={handleSaveTask}
           task={editingTask}
           onTriggerAIBreakdown={handleTriggerAIBreakdown}
+          // --- REMOVE FOR BACKEND INTEGRATION: START ---
           isApiKeyMissing={isApiKeyMissing}
+          // --- REMOVE FOR BACKEND INTEGRATION: END ---
         />
       )}
 

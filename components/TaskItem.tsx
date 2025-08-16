@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Task, TaskStatus, TaskPriority } from '../types';
 import { PencilIcon, TrashIcon, SparklesIcon, CalendarDaysIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -78,6 +79,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onEdit, onDelete, onUpdateSta
         </div>
 
         <div className="flex space-x-1.5">
+          {/* --- UNCOMMENT FOR BACKEND INTEGRATION: START ---
+          <button
+            onClick={() => onTriggerAIBreakdown(task.title, task.description, task.dueDate)}
+            className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-300"
+            title="Break down task with AI"
+          >
+            <SparklesIcon className="h-5 w-5" />
+          </button>
+           --- UNCOMMENT FOR BACKEND INTEGRATION: END --- */}
+          
+          {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
           {process.env.API_KEY && process.env.API_KEY !== "" && ( // Only show if API key might be available
             <button
               onClick={() => onTriggerAIBreakdown(task.title, task.description, task.dueDate)}
@@ -87,6 +99,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onEdit, onDelete, onUpdateSta
               <SparklesIcon className="h-5 w-5" />
             </button>
           )}
+          {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
           <button 
             onClick={() => onEdit(task)} 
             className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-300"

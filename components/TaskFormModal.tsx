@@ -11,10 +11,12 @@ interface TaskFormModalProps {
   onSave: (taskData: Omit<Task, 'id' | 'createdAt' | 'status'>, currentStatus?: TaskStatus) => void;
   task: Task | null;
   onTriggerAIBreakdown: (title: string, description?: string, dueDate?: string) => void;
+  // --- REMOVE FOR BACKEND INTEGRATION: START ---
   isApiKeyMissing: boolean;
+  // --- REMOVE FOR BACKEND INTEGRATION: END ---
 }
 
-const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, task, onTriggerAIBreakdown, isApiKeyMissing }) => {
+const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, task, onTriggerAIBreakdown, /* --- REMOVE FOR BACKEND INTEGRATION --- */ isApiKeyMissing }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -137,6 +139,20 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
           >
             Cancel
           </button>
+          {/* --- UNCOMMENT FOR BACKEND INTEGRATION: START ---
+          <button
+              type="button"
+              onClick={handleAIBreakdownClick}
+              disabled={!title.trim()}
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!title.trim() ? "Enter a title first" : "Break down this task using AI"}
+          >
+              <SparklesIcon className="h-5 w-5 mr-2" />
+              AI Breakdown
+          </button>
+          --- UNCOMMENT FOR BACKEND INTEGRATION: END --- */}
+
+          {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
           {!isApiKeyMissing && (
             <button
                 type="button"
@@ -149,6 +165,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
                 AI Breakdown
             </button>
           )}
+          {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
           <button
             type="submit"
             className="w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"

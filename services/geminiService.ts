@@ -1,3 +1,48 @@
+
+/*
+// --- UNCOMMENT AND REPLACE ENTIRE FILE FOR BACKEND INTEGRATION: START ---
+
+import { AISubTaskSuggestion } from '../types';
+
+// The URL of your new backend server
+const BACKEND_API_URL = 'http://127.0.0.1:8000/api/breakdown-task';
+
+export const breakDownTaskWithAI = async (taskTitle: string, taskDescription?: string): Promise<AISubTaskSuggestion[]> => {
+  try {
+    const response = await fetch(BACKEND_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: taskTitle,
+        description: taskDescription,
+      }),
+    });
+
+    if (!response.ok) {
+      // Try to get a detailed error message from the backend's response body
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    const suggestions: AISubTaskSuggestion[] = await response.json();
+    return suggestions;
+
+  } catch (error) {
+    console.error("Error breaking down task via backend:", error);
+    let errorMessage = "Failed to get sub-task suggestions.";
+    if (error instanceof Error) {
+        errorMessage += ` Details: ${error.message}`;
+    }
+    throw new Error(errorMessage);
+  }
+};
+
+// --- UNCOMMENT AND REPLACE ENTIRE FILE FOR BACKEND INTEGRATION: END ---
+*/
+
+// --- REMOVE FOR BACKEND INTEGRATION: START ---
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { GEMINI_MODEL_TEXT } from '../constants';
 import { AISubTaskSuggestion } from '../types';
@@ -79,3 +124,4 @@ export const breakDownTaskWithAI = async (taskTitle: string, taskDescription?: s
     throw new Error(errorMessage);
   }
 };
+// --- REMOVE FOR BACKEND INTEGRATION: END ---
