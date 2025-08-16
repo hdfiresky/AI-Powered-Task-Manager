@@ -1,12 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Task Manager</title>
+    <!-- Tailwind CSS CDN for rapid UI development without a build step -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- --- REMOVE FOR BACKEND INTEGRATION: START --- -->
+    <!-- This script is a shim for the frontend-only demo mode. -->
+    <!-- It simulates a Node.js-like `process.env` object in the browser, -->
+    <!-- allowing the Gemini API client to be initialized without a build tool. -->
     <script>
       // This shim allows the application to access process.env.API_KEY in a browser environment
       // without a build step. In a real build environment (e.g., Vite, Create React App),
@@ -27,14 +31,15 @@
       };
     </script>
     <!-- --- REMOVE FOR BACKEND INTEGRATION: END --- -->
+
     <style>
-      /* Custom scrollbar for better aesthetics */
+      /* Custom scrollbar for better aesthetics across the application */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: #f1f1f1; /* A light grey track */
         border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb {
@@ -44,6 +49,8 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8; /* slate-400 */
       }
+
+      /* Simple keyframe animation for modal entry */
        @keyframes modalShow {
           from {
             opacity: 0;
@@ -54,10 +61,16 @@
             transform: scale(1);
           }
         }
+        /* Class to apply the modal animation */
         .animate-modalShow {
           animation: modalShow 0.3s ease-out forwards;
         }
     </style>
+    <!-- 
+      Import Map: A modern browser feature that allows mapping module specifiers to URLs.
+      This lets us use bare module specifiers (e.g., 'react') like in a Node.js environment,
+      but have the browser fetch them from a CDN. This avoids the need for a bundler like Webpack or Vite for this demo.
+    -->
 <script type="importmap">
 {
   "imports": {
@@ -71,7 +84,9 @@
 </script>
 </head>
 <body class="bg-slate-100 antialiased">
+    <!-- The root div where our React application will be mounted -->
     <div id="root"></div>
+    <!-- The entry point script for our application, declared as a module to use imports -->
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

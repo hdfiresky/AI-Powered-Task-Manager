@@ -1,3 +1,8 @@
+/**
+ * @file AISuggestionsModal.tsx
+ * @description A modal component dedicated to displaying the results of an AI task breakdown.
+ * It handles and displays loading, error, and success states.
+ */
 
 import React from 'react';
 import Modal from './Modal';
@@ -5,14 +10,18 @@ import { AISubTaskSuggestion } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import { CheckCircleIcon, ExclamationTriangleIcon, LightBulbIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 
+/**
+ * @interface AISuggestionsModalProps
+ * @description Defines the props for the AISuggestionsModal.
+ */
 interface AISuggestionsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  suggestions: AISubTaskSuggestion[];
-  originalTaskTitle?: string;
-  isLoading: boolean;
-  error: string | null;
-  onAddSuggestedTasks: (suggestions: AISubTaskSuggestion[]) => void;
+  isOpen: boolean;    // Controls the visibility of the modal.
+  onClose: () => void;  // Callback to close the modal.
+  suggestions: AISubTaskSuggestion[]; // The array of suggestions from the AI.
+  originalTaskTitle?: string; // The title of the parent task, for context.
+  isLoading: boolean; // Flag to indicate if the AI is currently processing.
+  error: string | null; // Stores any error message from the AI service.
+  onAddSuggestedTasks: (suggestions: AISubTaskSuggestion[]) => void; // Callback to add the suggestions as new tasks.
 }
 
 const AISuggestionsModal: React.FC<AISuggestionsModalProps> = ({
@@ -24,20 +33,29 @@ const AISuggestionsModal: React.FC<AISuggestionsModalProps> = ({
   error,
   onAddSuggestedTasks,
 }) => {
+  /**
+   * Handles the click event for the "Add These Sub-tasks" button.
+   */
   const handleAddTasks = () => {
     onAddSuggestedTasks(suggestions);
   };
 
+  // Dynamically set the modal title based on the current state.
   const modalTitle = error && !isLoading ? "AI Error" : (isLoading ? "AI Thinking..." : "AI Sub-task Suggestions");
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="lg">
+      {/* --- 1. Loading State --- */}
+      {/* Display a loading spinner and message while waiting for the AI response. */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center p-8 min-h-[200px]">
           <LoadingSpinner />
           <p className="mt-4 text-slate-600 text-center">AI is generating sub-tasks for: <br/> <strong className="font-medium">"{originalTaskTitle}"</strong></p>
         </div>
       )}
+
+      {/* --- 2. Error State --- */}
+      {/* Display an error message if the API call fails. */}
       {error && !isLoading && (
         <div className="p-4 text-center min-h-[200px] flex flex-col justify-center items-center">
           <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -51,6 +69,9 @@ const AISuggestionsModal: React.FC<AISuggestionsModalProps> = ({
           </button>
         </div>
       )}
+
+      {/* --- 3. Success State (with suggestions) --- */}
+      {/* Display the list of suggested sub-tasks if the call was successful and returned items. */}
       {!isLoading && !error && suggestions.length > 0 && (
         <div className="space-y-4">
            <div className="p-3 bg-sky-50 border border-sky-200 rounded-lg shadow-sm">
@@ -69,6 +90,7 @@ const AISuggestionsModal: React.FC<AISuggestionsModalProps> = ({
               </li>
             ))}
           </ul>
+          {/* Action buttons to add the tasks or cancel */}
           <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t border-slate-200 mt-4">
             <button
               onClick={onClose}
@@ -86,7 +108,10 @@ const AISuggestionsModal: React.FC<AISuggestionsModalProps> = ({
           </div>
         </div>
       )}
-       {!isLoading && !error && suggestions.length === 0 && (originalTaskTitle || !originalTaskTitle && !error) && ( // Show "no suggestions" if not loading, no error, and 0 suggestions
+
+       {/* --- 4. Success State (no suggestions) --- */}
+       {/* Display a message if the AI call was successful but returned no suggestions. */}
+       {!isLoading && !error && suggestions.length === 0 && (originalTaskTitle || !originalTaskTitle && !error) && (
          <div className="p-6 text-center min-h-[200px] flex flex-col justify-center items-center">
             <InformationCircleIcon className="h-12 w-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">No Sub-tasks Suggested</h3>
