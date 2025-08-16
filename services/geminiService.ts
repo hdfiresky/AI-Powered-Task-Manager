@@ -128,7 +128,7 @@ import { AISubTaskSuggestion } from '../types';
 // Use the absolute URL which includes the port your backend is running on.
 // This is necessary because your frontend dev server (e.g., localhost:5173) and
 // backend server (localhost:8000) are on different ports.
-const BACKEND_API_URL = '/api/breakdown-task';
+const BACKEND_API_URL = 'api/breakdown-task';
 
 // --- FOR PRODUCTION (behind a reverse proxy) ---
 // When you deploy, your reverse proxy (like Nginx) will handle routing.
