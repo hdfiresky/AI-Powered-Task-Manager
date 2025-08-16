@@ -112,7 +112,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onEdit, onDelete, onUpdateSta
         <div className="flex space-x-1.5">
           {/* --- UNCOMMENT FOR BACKEND INTEGRATION: START --- */}
           {/* This version of the button is always visible when using the backend. */}
-          {/*
+          
           <button
             onClick={() => onTriggerAIBreakdown(task.title, task.description, task.dueDate)}
             className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-300"
@@ -120,12 +120,12 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onEdit, onDelete, onUpdateSta
           >
             <SparklesIcon className="h-5 w-5" />
           </button>
-          */}
+          
           {/* --- UNCOMMENT FOR BACKEND INTEGRATION: END --- */}
           
           {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
           {/* This version is for the frontend-only demo and only shows if the API key is present. */}
-          {process.env.API_KEY && process.env.API_KEY !== "" && (
+          {/*{process.env.API_KEY && process.env.API_KEY !== "" && (
             <button
               onClick={() => onTriggerAIBreakdown(task.title, task.description, task.dueDate)}
               className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-300"
@@ -133,7 +133,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onEdit, onDelete, onUpdateSta
             >
               <SparklesIcon className="h-5 w-5" />
             </button>
-          )}
+          )}*/}
           {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
           
           {/* Edit Button */}

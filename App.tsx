@@ -45,15 +45,15 @@ const App: React.FC = () => {
   
   // --- REMOVE FOR BACKEND INTEGRATION: START ---
   // `isApiKeyMissing` state: Specific to the frontend-only demo. Tracks if the API key is missing.
-  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  // const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
 
-  // Effect to check for the API key on component mount.
-  useEffect(() => {
-    // In the demo setup, process.env is a shim in index.html.
-    if (!process.env.API_KEY || process.env.API_KEY === "") {
-      setIsApiKeyMissing(true);
-    }
-  }, []);
+  // // Effect to check for the API key on component mount.
+  // useEffect(() => {
+  //   // In the demo setup, process.env is a shim in index.html.
+  //   if (!process.env.API_KEY || process.env.API_KEY === "") {
+  //     setIsApiKeyMissing(true);
+  //   }
+  // }, []);
   // --- REMOVE FOR BACKEND INTEGRATION: END ---
 
   // --- EVENT HANDLERS ---
@@ -124,12 +124,12 @@ const App: React.FC = () => {
   const handleTriggerAIBreakdown = async (title: string, description?: string, dueDate?: string) => {
     // --- REMOVE FOR BACKEND INTEGRATION: START ---
     // In frontend-only mode, first check if the API key is available.
-    if (isApiKeyMissing) {
-        setAiError("Gemini API key is not configured. AI features are unavailable. Please set the API_KEY environment variable (e.g. in index.html for this demo).");
-        setAiSubTaskSuggestions([]);
-        setIsAISuggestionsModalOpen(true);
-        return;
-    }
+    // if (isApiKeyMissing) {
+    //     setAiError("Gemini API key is not configured. AI features are unavailable. Please set the API_KEY environment variable (e.g. in index.html for this demo).");
+    //     setAiSubTaskSuggestions([]);
+    //     setIsAISuggestionsModalOpen(true);
+    //     return;
+    // }
     // --- REMOVE FOR BACKEND INTEGRATION: END ---
 
     // Set up state for the AI modal (loading, context, etc.).
@@ -189,7 +189,7 @@ const App: React.FC = () => {
       <main className="flex-grow p-4 md:p-6 lg:p-8">
         {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
         {/* Display a warning banner if the API key is missing in frontend-only mode. */}
-        {isApiKeyMissing && (
+        {/*{isApiKeyMissing && (
              <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md flex items-start shadow">
                 <ExclamationTriangleIcon className="h-6 w-6 mr-3 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
@@ -201,7 +201,7 @@ const App: React.FC = () => {
                     </p>
                 </div>
             </div>
-        )}
+        )}*/}
         {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
 
         {/* Render the main task board with a column for each status. */}
@@ -231,7 +231,7 @@ const App: React.FC = () => {
           task={editingTask}
           onTriggerAIBreakdown={handleTriggerAIBreakdown}
           // --- REMOVE FOR BACKEND INTEGRATION: START ---
-          isApiKeyMissing={isApiKeyMissing}
+          // isApiKeyMissing={isApiKeyMissing}
           // --- REMOVE FOR BACKEND INTEGRATION: END ---
         />
       )}

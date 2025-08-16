@@ -20,11 +20,11 @@ interface TaskFormModalProps {
   task: Task | null;  // The task object to edit. If null, the form is for a new task.
   onTriggerAIBreakdown: (title: string, description?: string, dueDate?: string) => void; // Callback to initiate AI breakdown.
   // --- REMOVE FOR BACKEND INTEGRATION: START ---
-  isApiKeyMissing: boolean; // Prop for the frontend-only demo to control UI elements.
+  // isApiKeyMissing: boolean; // Prop for the frontend-only demo to control UI elements.
   // --- REMOVE FOR BACKEND INTEGRATION: END ---
 }
 
-const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, task, onTriggerAIBreakdown, /* --- REMOVE FOR BACKEND INTEGRATION --- */ isApiKeyMissing }) => {
+const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, task, onTriggerAIBreakdown, /* --- REMOVE FOR BACKEND INTEGRATION ---  isApiKeyMissing */}) => {
   // State for each form field.
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -174,7 +174,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
           
           {/* --- UNCOMMENT FOR BACKEND INTEGRATION: START --- */}
           {/* This version of the button is always available when using the backend. */}
-          {/*
+          
           <button
               type="button"
               onClick={handleAIBreakdownClick}
@@ -185,12 +185,12 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
               <SparklesIcon className="h-5 w-5 mr-2" />
               AI Breakdown
           </button>
-          */}
+          
           {/* --- UNCOMMENT FOR BACKEND INTEGRATION: END --- */}
 
           {/* --- REMOVE FOR BACKEND INTEGRATION: START --- */}
           {/* This version is for the frontend-only demo and is hidden if the API key is missing. */}
-          {!isApiKeyMissing && (
+          {/*{!isApiKeyMissing && (
             <button
                 type="button"
                 onClick={handleAIBreakdownClick}
@@ -201,7 +201,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
                 <SparklesIcon className="h-5 w-5 mr-2" />
                 AI Breakdown
             </button>
-          )}
+          )}*/}
           {/* --- REMOVE FOR BACKEND INTEGRATION: END --- */}
 
           <button
