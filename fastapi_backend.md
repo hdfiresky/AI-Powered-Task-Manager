@@ -104,6 +104,7 @@ Now, let's write the server code.
     import json
     from dotenv import load_dotenv
     import google.generativeai as genai
+    from google.generativeai.types import GenerationConfig
     from fastapi import FastAPI, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
     from pydantic import BaseModel, Field
@@ -179,10 +180,15 @@ Now, let's write the server code.
                 Respond with a valid JSON array of objects, where each object has a "title" key (string) and an optional "description" key (string).
             """
             
-            # Generate content using the Gemini API, asking for a JSON response
+            # Create a generation config to ensure the response is in JSON format.
+            generation_config = GenerationConfig(
+                response_mime_type="application/json"
+            )
+            
+            # Generate content using the Gemini API
             response = model.generate_content(
                 prompt,
-                generation_config={"response_mime_type": "application/json"}
+                generation_config=generation_config
             )
 
             # The API should return a JSON string directly.
