@@ -227,15 +227,47 @@ With your virtual environment active, run the server from your terminal:
 ```bash
 # For development
 uvicorn main:app --reload
-
-# For production (see Docker section for best practice)
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
 ```
 
-*   `uvicorn main:app --reload`: Best for development. It's fast and auto-reloads when you change code.
-*   `gunicorn ...`: Best for production. It manages multiple processes to handle more traffic and increase reliability.
-
 You should see output indicating the server is running, usually at `http://127.0.0.1:8000`.
+
+### Testing the Endpoint Locally
+
+Once the server is running, you can test the `/api/breakdown-task` endpoint directly to ensure it's working correctly without needing the frontend.
+
+Open a **new terminal window** (leave the `uvicorn` server running) and use a command-line tool like `curl` to send a test request.
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/breakdown-task" \
+-H "Content-Type: application/json" \
+-d '{
+    "title": "Plan a company offsite event",
+    "description": "Organize a three-day offsite for 50 employees, including travel, accommodation, and activities."
+}'
+```
+
+#### Expected Response
+
+If your API key is correct and the server is working, you should get a JSON response back in your terminal that looks something like this (the exact content will vary based on the AI's response):
+
+```json
+[
+  {
+    "title": "Finalize budget and get approval",
+    "description": "Create a detailed budget covering all expenses and submit it for management approval."
+  },
+  {
+    "title": "Book venue and accommodation",
+    "description": "Research and book a suitable venue that can accommodate 50 people for three days."
+  },
+  {
+    "title": "Arrange travel and transportation",
+    "description": "Coordinate flights or other transportation for all employees attending the offsite."
+  }
+]
+```
+
+If you see an error, check the terminal where `uvicorn` is running for more detailed logs. A common issue is a missing or invalid `GEMINI_API_KEY` in your `.env` file.
 
 ---
 
@@ -331,7 +363,9 @@ EXPOSE 8000
 # This is the recommended setup for production to handle concurrent requests
 # and leverage multiple CPU cores.
 #
-# -w 4: Starts 4 worker processes. A good starting point is (2 * CPU_CORES) + 1.
+# A good starting point for the number of workers is (2 * CPU_CORES) + 1.
+# Example for a 2-core CPU: -w 5
+#
 # -k uvicorn.workers.UvicornWorker: Specifies that Gunicorn should use Uvicorn's worker class.
 # --bind 0.0.0.0:8000: Binds the server to port 8000 on all network interfaces.
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
