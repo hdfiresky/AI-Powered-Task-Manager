@@ -50,15 +50,15 @@ First, let's create a new directory for our backend code and set up a virtual en
 We need a few Python packages to build our server.
 
 *   `fastapi`: The web framework itself.
-*   `uvicorn`: The server that runs our FastAPI application.
+*   `uvicorn`: The ASGI server that runs our app.
+*   `gunicorn`: A production-grade process manager.
 *   `google-generativeai`: The official Python SDK for the Gemini API.
 *   `python-dotenv`: To manage environment variables (like our API key).
-*   `pydantic`: For data validation (comes with FastAPI, but good to be explicit).
 
 Install them all with pip:
 
 ```bash
-pip install "fastapi[all]" uvicorn google-generativeai python-dotenv
+pip install "fastapi[all]" uvicorn gunicorn google-generativeai python-dotenv
 ```
 
 ---
@@ -225,14 +225,17 @@ Now, let's write the server code.
 With your virtual environment active, run the server from your terminal:
 
 ```bash
+# For development
 uvicorn main:app --reload
+
+# For production (see Docker section for best practice)
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
 ```
 
-*   `main`: Refers to the `main.py` file.
-*   `app`: Refers to the `app = FastAPI()` object inside `main.py`.
-*   `--reload`: Makes the server restart automatically after you change the code.
+*   `uvicorn main:app --reload`: Best for development. It's fast and auto-reloads when you change code.
+*   `gunicorn ...`: Best for production. It manages multiple processes to handle more traffic and increase reliability.
 
-You should see output indicating the server is running, usually at `http://127.0.0.1:8000`. You can visit this URL in your browser to see the health check message.
+You should see output indicating the server is running, usually at `http://127.0.0.1:8000`.
 
 ---
 
@@ -285,35 +288,28 @@ Now, you need to modify your React application to call your new backend endpoint
 2.  **Clean up `index.html`**:
     You can now completely remove the `window.process` script block from `index.html`. Your API key is no longer needed on the client-side.
 
-    ```html
-    <!-- REMOVE THIS ENTIRE SCRIPT BLOCK -->
-    <script>
-      window.process = { 
-        env: { 
-          API_KEY: "" 
-        } 
-      };
-    </script>
-    ```
-
 3.  **Clean up `App.tsx` and other components**:
     *   In `App.tsx`, you can remove the `isApiKeyMissing` state and all related logic (the `useEffect` hook and the warning banner).
-    *   In `TaskItem.tsx` and `TaskFormModal.tsx`, you can remove any conditional rendering that was based on the API key's presence. The AI features will now always be available as long as your backend is running correctly.
+    *   In `TaskItem.tsx` and `TaskFormModal.tsx`, you can remove any conditional rendering that was based on the API key's presence.
 
 ---
 
-## Step 7: (Optional) Containerizing with Docker and Docker Compose
+## Step 7: Containerizing with Docker (Production-Ready)
 
-Containerizing your backend with Docker provides a consistent, isolated, and portable environment for your application. This makes development easier and deployment much more reliable. Docker Compose further simplifies managing the container's configuration and lifecycle.
+Containerizing your backend provides a consistent, isolated, and portable environment. This is the standard for modern deployment.
 
 ### 1. Create a `Dockerfile`
 
-This file is the blueprint for building your application's Docker image. Create a file named `Dockerfile` (no extension) in your `task-manager-backend` root directory.
+This file is the blueprint for building your application's Docker image. For production, we will use **Gunicorn** to manage **Uvicorn workers**. This combination is robust and fully utilizes multi-core CPUs.
 
 **File: `Dockerfile`**
 ```dockerfile
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
 # Set the working directory in the container
 WORKDIR /app
@@ -321,7 +317,7 @@ WORKDIR /app
 # Copy the dependency list
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application's code into the container
@@ -330,14 +326,20 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Define the command to run your app using uvicorn
-# We use --host 0.0.0.0 to make it accessible from outside the container
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --- PRODUCTION COMMAND ---
+# Use Gunicorn as the process manager to run multiple Uvicorn workers.
+# This is the recommended setup for production to handle concurrent requests
+# and leverage multiple CPU cores.
+#
+# -w 4: Starts 4 worker processes. A good starting point is (2 * CPU_CORES) + 1.
+# -k uvicorn.workers.UvicornWorker: Specifies that Gunicorn should use Uvicorn's worker class.
+# --bind 0.0.0.0:8000: Binds the server to port 8000 on all network interfaces.
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
 ```
 
 ### 2. Create a `.dockerignore` File
 
-To keep your Docker image small and clean, you should exclude unnecessary files. Create a `.dockerignore` file in the same directory.
+To keep your Docker image small and clean, exclude unnecessary files.
 
 **File: `.dockerignore`**
 ```
@@ -349,9 +351,9 @@ __pycache__
 .vscode
 ```
 
-### 3. Using Docker Compose (Recommended)
+### 3. Using Docker Compose
 
-Docker Compose is the standard tool for defining and running multi-container Docker applications. It uses a YAML file to configure your application's services, making it very easy to manage.
+Docker Compose simplifies managing your container's configuration and lifecycle.
 
 Create a file named `docker-compose.yml` in your backend's root directory.
 
@@ -370,16 +372,14 @@ services:
       # This tells Docker Compose to load environment variables from the .env file
       - .env
     # The following volume mount is useful for development.
-    # It syncs your local code with the code inside the container,
-    # so you don't have to rebuild the image for every code change.
-    # Uvicorn's --reload flag will automatically restart the server.
+    # It syncs local code changes into the container instantly.
+    # However, Gunicorn does not auto-reload. For development with Docker,
+    # you might temporarily change the CMD in the Dockerfile back to `uvicorn --reload`.
     volumes:
       - .:/app
 ```
 
 ### 4. Running the Backend with Docker Compose
-
-With the `Dockerfile` and `docker-compose.yml` files in place, running your application is simple.
 
 1.  **Build and run the container:**
     Open your terminal in the `task-manager-backend` directory and run:
@@ -389,7 +389,7 @@ With the `Dockerfile` and `docker-compose.yml` files in place, running your appl
     *   `--build`: This flag tells Docker Compose to build the image before starting the container. You only need it the first time or when you change the `Dockerfile` or `requirements.txt`. For subsequent runs, `docker-compose up` is sufficient.
 
 2.  **Accessing the API:**
-    Your backend is now running inside a Docker container, but it's accessible exactly as before on `http://127.0.0.1:8000` because of the `ports: - "8000:8000"` mapping. Your React frontend can continue to call this URL without any changes.
+    Your backend is now running inside a Docker container, accessible on `http://127.0.0.1:8000`.
 
 3.  **Stopping the application:**
     To stop the container, press `Ctrl+C` in the terminal where it's running. To stop and remove the container, run:
@@ -397,145 +397,8 @@ With the `Dockerfile` and `docker-compose.yml` files in place, running your appl
     docker-compose down
     ```
 
-This setup gives you a professional, reproducible development environment and is the first step toward deploying your application to the cloud.
-
----
-
-## Step 8: Scaling with a Load Balancer (Nginx)
-
-Once your application is containerized, the next step is to prepare it for higher traffic and improve its reliability. A single instance of your backend can only handle a limited number of requests. If that instance crashes, your entire application goes down.
-
-**Load balancing** solves this by distributing incoming traffic across multiple instances (replicas) of your backend service.
-
-### How it Works:
-
-1.  We will run multiple containers of our FastAPI application.
-2.  We will introduce **Nginx** as a "reverse proxy" and "load balancer".
-3.  The frontend will send all requests to Nginx.
-4.  Nginx will then forward each request to one of the available backend containers, cycling through them to distribute the load.
-5.  If one backend container fails, Nginx will automatically send requests to the healthy ones, providing **high availability**.
-
-![Load Balancer Diagram](https://storage.googleapis.com/project-avis/LoadBalancerDiagram.png)
-
-Let's implement this using Docker Compose.
-
-### 8.1 Create the Nginx Configuration
-
-Nginx needs a configuration file to know where to send the traffic.
-
-1.  In your `task-manager-backend` directory, create a new folder named `nginx`.
-2.  Inside the `nginx` folder, create a file named `nginx.conf`.
-
-    **File: `nginx/nginx.conf`**
-    ```nginx
-    # This block defines settings for handling events. 'worker_connections' sets
-    # the maximum number of simultaneous connections that can be opened by a worker process.
-    events {
-        worker_connections 1024;
-    }
-
-    # This block defines the settings for handling HTTP requests.
-    http {
-        # 'upstream' defines a group of servers that we can proxy requests to.
-        # We'll call our group 'backend_servers'.
-        upstream backend_servers {
-            # 'least_conn' is a load balancing method that sends requests to the
-            # server with the fewest active connections, ensuring a balanced load.
-            least_conn;
-
-            # 'server backend:8000' adds a server to the group.
-            # 'backend' is the name of our FastAPI service in docker-compose.yml.
-            # Docker's internal DNS will resolve 'backend' to the IP addresses of
-            # our running backend containers. We will run multiple containers for this service.
-            # '8000' is the port our FastAPI app listens on inside the container.
-            server backend:8000;
-        }
-
-        # This block defines a virtual server that will handle incoming requests.
-        server {
-            # Nginx will listen on port 8000 for incoming connections.
-            listen 8000;
-
-            # This 'location' block matches any request path ('/').
-            location / {
-                # 'proxy_pass' is the magic directive. It forwards the request to
-                # our 'backend_servers' upstream group. Nginx will handle picking
-                # which specific container gets the request.
-                proxy_pass http://backend_servers;
-
-                # These headers are important for passing information about the
-                # original request to the backend service.
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
-        }
-    }
-    ```
-
-### 8.2 Update Docker Compose for Scalability
-
-Now we update our `docker-compose.yml` to include the Nginx service and prepare the backend service for scaling.
-
-Replace the content of your `docker-compose.yml` with the following:
-
-**File: `docker-compose.yml` (Updated)**
-```yaml
-version: '3.8'
-
-services:
-  # This is our FastAPI backend service.
-  backend:
-    build: .
-    # We no longer need a container_name as we will have multiple instances.
-    env_file:
-      - .env
-    volumes:
-      - .:/app
-    # IMPORTANT: We remove the 'ports' section from the backend.
-    # We do not want to expose the backend containers directly to the host machine.
-    # Only Nginx should be publicly accessible. It will communicate with the
-    # backend containers over Docker's internal network.
-
-  # This is our new Nginx load balancer service.
-  nginx:
-    # Use the official stable Nginx image from Docker Hub.
-    image: nginx:stable-alpine
-    container_name: task-manager-load-balancer
-    ports:
-      # Map port 8000 on the host machine to port 8000 in the Nginx container.
-      # This is now the single entry point for all frontend traffic.
-      - "8000:8000"
-    volumes:
-      # Mount our custom nginx.conf into the container, overwriting the default one.
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      # This ensures that Nginx will only start after the backend service is started.
-      - backend
-```
-
-### 8.3 Run the Scaled Application
-
-With the new configuration, you can now run multiple instances of your backend and have Nginx balance the load.
-
-1.  **Build and run the services:**
-    Open your terminal in the `task-manager-backend` directory and run:
-    ```bash
-    docker-compose up --build --scale backend=3
-    ```
-    - `--scale backend=3`: This is the key command. It tells Docker Compose to create and run **3 instances** (containers) of our `backend` service.
-    - `--build`: Rebuilds the images if anything in the `Dockerfile` or source code has changed.
-
-2.  **Verify it's working:**
-    - Your frontend application should work exactly as before by calling `http://127.0.0.1:8000/api/breakdown-task`. The user is completely unaware of the complex architecture behind this single URL.
-    - In your terminal, you will see logs from all three backend containers (e.g., `backend_1`, `backend_2`, `backend_3`) and the `nginx` container. When you make requests from the frontend, you will see the `POST /api/breakdown-task` logs appear in different backend containers, confirming that Nginx is distributing the traffic.
-
-3.  **Stopping the application:**
-    Press `Ctrl+C` in the terminal, then run `docker-compose down` to stop and remove all containers.
-
 ---
 
 ## Conclusion
 
-Congratulations! You have successfully refactored your application to use a secure backend. Your API key is now safe on the server, and your frontend is cleaner and more focused on the user interface. Furthermore, by implementing a load balancer, you've built a scalable and resilient architecture that is ready for future expansion and can handle a significantly higher number of concurrent users.
+Congratulations! You have successfully refactored your application to use a secure backend. Your API key is now safe on the server, and your architecture is robust, secure, and ready for production deployment.
