@@ -401,6 +401,141 @@ This setup gives you a professional, reproducible development environment and is
 
 ---
 
+## Step 8: Scaling with a Load Balancer (Nginx)
+
+Once your application is containerized, the next step is to prepare it for higher traffic and improve its reliability. A single instance of your backend can only handle a limited number of requests. If that instance crashes, your entire application goes down.
+
+**Load balancing** solves this by distributing incoming traffic across multiple instances (replicas) of your backend service.
+
+### How it Works:
+
+1.  We will run multiple containers of our FastAPI application.
+2.  We will introduce **Nginx** as a "reverse proxy" and "load balancer".
+3.  The frontend will send all requests to Nginx.
+4.  Nginx will then forward each request to one of the available backend containers, cycling through them to distribute the load.
+5.  If one backend container fails, Nginx will automatically send requests to the healthy ones, providing **high availability**.
+
+![Load Balancer Diagram](https://storage.googleapis.com/project-avis/LoadBalancerDiagram.png)
+
+Let's implement this using Docker Compose.
+
+### 8.1 Create the Nginx Configuration
+
+Nginx needs a configuration file to know where to send the traffic.
+
+1.  In your `task-manager-backend` directory, create a new folder named `nginx`.
+2.  Inside the `nginx` folder, create a file named `nginx.conf`.
+
+    **File: `nginx/nginx.conf`**
+    ```nginx
+    # This block defines settings for handling events. 'worker_connections' sets
+    # the maximum number of simultaneous connections that can be opened by a worker process.
+    events {
+        worker_connections 1024;
+    }
+
+    # This block defines the settings for handling HTTP requests.
+    http {
+        # 'upstream' defines a group of servers that we can proxy requests to.
+        # We'll call our group 'backend_servers'.
+        upstream backend_servers {
+            # 'least_conn' is a load balancing method that sends requests to the
+            # server with the fewest active connections, ensuring a balanced load.
+            least_conn;
+
+            # 'server backend:8000' adds a server to the group.
+            # 'backend' is the name of our FastAPI service in docker-compose.yml.
+            # Docker's internal DNS will resolve 'backend' to the IP addresses of
+            # our running backend containers. We will run multiple containers for this service.
+            # '8000' is the port our FastAPI app listens on inside the container.
+            server backend:8000;
+        }
+
+        # This block defines a virtual server that will handle incoming requests.
+        server {
+            # Nginx will listen on port 8000 for incoming connections.
+            listen 8000;
+
+            # This 'location' block matches any request path ('/').
+            location / {
+                # 'proxy_pass' is the magic directive. It forwards the request to
+                # our 'backend_servers' upstream group. Nginx will handle picking
+                # which specific container gets the request.
+                proxy_pass http://backend_servers;
+
+                # These headers are important for passing information about the
+                # original request to the backend service.
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
+    }
+    ```
+
+### 8.2 Update Docker Compose for Scalability
+
+Now we update our `docker-compose.yml` to include the Nginx service and prepare the backend service for scaling.
+
+Replace the content of your `docker-compose.yml` with the following:
+
+**File: `docker-compose.yml` (Updated)**
+```yaml
+version: '3.8'
+
+services:
+  # This is our FastAPI backend service.
+  backend:
+    build: .
+    # We no longer need a container_name as we will have multiple instances.
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    # IMPORTANT: We remove the 'ports' section from the backend.
+    # We do not want to expose the backend containers directly to the host machine.
+    # Only Nginx should be publicly accessible. It will communicate with the
+    # backend containers over Docker's internal network.
+
+  # This is our new Nginx load balancer service.
+  nginx:
+    # Use the official stable Nginx image from Docker Hub.
+    image: nginx:stable-alpine
+    container_name: task-manager-load-balancer
+    ports:
+      # Map port 8000 on the host machine to port 8000 in the Nginx container.
+      # This is now the single entry point for all frontend traffic.
+      - "8000:8000"
+    volumes:
+      # Mount our custom nginx.conf into the container, overwriting the default one.
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      # This ensures that Nginx will only start after the backend service is started.
+      - backend
+```
+
+### 8.3 Run the Scaled Application
+
+With the new configuration, you can now run multiple instances of your backend and have Nginx balance the load.
+
+1.  **Build and run the services:**
+    Open your terminal in the `task-manager-backend` directory and run:
+    ```bash
+    docker-compose up --build --scale backend=3
+    ```
+    - `--scale backend=3`: This is the key command. It tells Docker Compose to create and run **3 instances** (containers) of our `backend` service.
+    - `--build`: Rebuilds the images if anything in the `Dockerfile` or source code has changed.
+
+2.  **Verify it's working:**
+    - Your frontend application should work exactly as before by calling `http://127.0.0.1:8000/api/breakdown-task`. The user is completely unaware of the complex architecture behind this single URL.
+    - In your terminal, you will see logs from all three backend containers (e.g., `backend_1`, `backend_2`, `backend_3`) and the `nginx` container. When you make requests from the frontend, you will see the `POST /api/breakdown-task` logs appear in different backend containers, confirming that Nginx is distributing the traffic.
+
+3.  **Stopping the application:**
+    Press `Ctrl+C` in the terminal, then run `docker-compose down` to stop and remove all containers.
+
+---
+
 ## Conclusion
 
-Congratulations! You have successfully refactored your application to use a secure backend. Your API key is now safe on the server, and your frontend is cleaner and more focused on the user interface. This architecture is robust, secure, and ready for future expansion.
+Congratulations! You have successfully refactored your application to use a secure backend. Your API key is now safe on the server, and your frontend is cleaner and more focused on the user interface. Furthermore, by implementing a load balancer, you've built a scalable and resilient architecture that is ready for future expansion and can handle a significantly higher number of concurrent users.
