@@ -122,15 +122,16 @@ export const breakDownTaskWithAI = async (taskTitle: string, taskDescription?: s
 // --- BACKEND IMPLEMENTATION (For Production - Secure) ---
 // --- UNCOMMENT THIS SECTION FOR BACKEND INTEGRATION: START ---
 /*
-// The URL of your FastAPI backend server.
-const BACKEND_API_URL = 'http://127.0.0.1:8000/api/breakdown-task';
+// The URL of your FastAPI backend server. Use a relative path.
+const BACKEND_API_URL = 'api/breakdown-task'; // CHANGED FROM http://127.0.0.1:8000/api/breakdown-task
 
 // Note: No imports from "@google/genai" are needed here because the frontend
 // no longer communicates directly with the Gemini API.
 
 export const breakDownTaskWithAI = async (taskTitle: string, taskDescription?: string): Promise<AISubTaskSuggestion[]> => {
   try {
-    // Make a POST request to our secure backend endpoint.
+    // The browser will automatically resolve this relative path to:
+    // https://domain.com/ai-powered-task-manager/api/breakdown-task
     const response = await fetch(BACKEND_API_URL, {
       method: 'POST',
       headers: {

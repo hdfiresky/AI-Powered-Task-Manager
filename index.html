@@ -3,35 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- THIS IS THE NEW LINE -->
+    <base href="/ai-powered-task-manager/">
+    
     <title>AI Task Manager</title>
     <!-- Tailwind CSS CDN for rapid UI development without a build step -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- --- REMOVE FOR BACKEND INTEGRATION: START --- -->
-    <!-- This script is a shim for the frontend-only demo mode. -->
-    <!-- It simulates a Node.js-like `process.env` object in the browser, -->
-    <!-- allowing the Gemini API client to be initialized without a build tool. -->
-    <script>
-      // This shim allows the application to access process.env.API_KEY in a browser environment
-      // without a build step. In a real build environment (e.g., Vite, Create React App),
-      // environment variables are typically injected differently.
-      //
-      // IMPORTANT FOR USERS:
-      // To enable AI features, you MUST replace the empty string below with your actual Gemini API Key.
-      // For example: window.process = { env: { API_KEY: "YOUR_GEMINI_API_KEY_HERE" } };
-      // If API_KEY remains an empty string or is not set, AI features will be disabled,
-      // and a warning message will be displayed in the app.
-      //
-      // DO NOT commit your actual API key to version control if this file is part of a repository.
-      // Manage API keys securely.
-      window.process = { 
-        env: { 
-          API_KEY: "" // Replace "" with your Gemini API Key
-        } 
-      };
-    </script>
-    <!-- --- REMOVE FOR BACKEND INTEGRATION: END --- -->
-
     <style>
       /* Custom scrollbar for better aesthetics across the application */
       ::-webkit-scrollbar {
