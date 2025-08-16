@@ -165,7 +165,6 @@ Now, let's write the server code.
         and returns a list of sub-task suggestions.
         """
         try:
-            # This is the same logic you had in the frontend's `geminiService.ts`
             model = genai.GenerativeModel(model_name="gemini-2.5-flash")
 
             prompt = f"""
@@ -176,29 +175,18 @@ Now, let's write the server code.
                 For each sub-task, provide a concise title and an optional short description (1-2 sentences).
                 Focus on creating actionable and distinct sub-tasks.
                 Do not include the original task itself in the sub-tasks.
+                
+                Respond with a valid JSON array of objects, where each object has a "title" key (string) and an optional "description" key (string).
             """
             
-            # Define the expected JSON output format for the model
-            response_schema = [
-                {
-                    "title": "string",
-                    "description": "string (optional)"
-                }
-            ]
-
-            # Generate content using the Gemini API
+            # Generate content using the Gemini API, asking for a JSON response
             response = model.generate_content(
                 prompt,
-                generation_config=genai.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=response_schema
-                )
+                generation_config={"response_mime_type": "application/json"}
             )
 
-            # Parse the JSON string from the response
-            # The response text might have markdown backticks, so we clean it
-            cleaned_json_str = response.text.strip().replace("```json", "").replace("```", "").strip()
-            sub_tasks = json.loads(cleaned_json_str)
+            # The API should return a JSON string directly.
+            sub_tasks = json.loads(response.text)
 
             # Validate and return the data using our Pydantic model
             return [SubTaskSuggestion(**task) for task in sub_tasks]
@@ -235,7 +223,11 @@ You should see output indicating the server is running, usually at `http://127.0
 
 Once the server is running, you can test the `/api/breakdown-task` endpoint directly to ensure it's working correctly without needing the frontend.
 
-Open a **new terminal window** (leave the `uvicorn` server running) and use a command-line tool like `curl` to send a test request.
+Open a **new terminal window** (leave the `uvicorn` server running) and use a command-line tool like `curl` to send a test request. The command is different for macOS/Linux vs. Windows.
+
+**For macOS and Linux (and Git Bash on Windows):**
+
+Use single quotes around the JSON data.
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/breakdown-task" \
@@ -244,6 +236,14 @@ curl -X POST "http://127.0.0.1:8000/api/breakdown-task" \
     "title": "Plan a company offsite event",
     "description": "Organize a three-day offsite for 50 employees, including travel, accommodation, and activities."
 }'
+```
+
+**For Windows Command Prompt (cmd.exe):**
+
+Use double quotes around the JSON data and escape the inner double quotes with a backslash `\`.
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/breakdown-task" -H "Content-Type: application/json" -d "{\"title\": \"Plan a company offsite event\", \"description\": \"Organize a three-day offsite for 50 employees, including travel, accommodation, and activities.\"}"
 ```
 
 #### Expected Response
