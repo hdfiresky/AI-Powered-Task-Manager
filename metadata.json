@@ -1,0 +1,5 @@
+{
+  "name": "AI-Powered Task Manager",
+  "description": "A task management application that helps users organize their tasks. It features task creation, status tracking (To Do, In Progress, Done), priority setting, and an AI-powered capability to break down complex tasks into smaller, manageable sub-tasks using Gemini API.",
+  "requestFramePermissions": []
+}
