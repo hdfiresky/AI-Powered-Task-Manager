@@ -17,6 +17,7 @@ Before you start, make sure you have the following installed:
 *   **Python 3.7+**: [Download Python](https://www.python.org/downloads/)
 *   **pip**: Python's package installer (usually comes with Python).
 *   A code editor like VS Code.
+*   **(Optional) Docker**: [Install Docker Desktop](https://www.docker.com/products/docker-desktop/) if you plan to follow the containerization steps.
 
 ---
 
@@ -59,6 +60,20 @@ Install them all with pip:
 ```bash
 pip install "fastapi[all]" uvicorn google-generativeai python-dotenv
 ```
+
+---
+
+### Step 2.5: Create a Requirements File
+
+To make your project's dependencies portable (especially for Docker later), create a `requirements.txt` file.
+
+Run this command in your terminal (with your virtual environment active):
+
+```bash
+pip freeze > requirements.txt
+```
+
+This captures the exact versions of the packages you installed, ensuring your application runs consistently everywhere.
 
 ---
 
@@ -284,6 +299,105 @@ Now, you need to modify your React application to call your new backend endpoint
 3.  **Clean up `App.tsx` and other components**:
     *   In `App.tsx`, you can remove the `isApiKeyMissing` state and all related logic (the `useEffect` hook and the warning banner).
     *   In `TaskItem.tsx` and `TaskFormModal.tsx`, you can remove any conditional rendering that was based on the API key's presence. The AI features will now always be available as long as your backend is running correctly.
+
+---
+
+## Step 7: (Optional) Containerizing with Docker and Docker Compose
+
+Containerizing your backend with Docker provides a consistent, isolated, and portable environment for your application. This makes development easier and deployment much more reliable. Docker Compose further simplifies managing the container's configuration and lifecycle.
+
+### 1. Create a `Dockerfile`
+
+This file is the blueprint for building your application's Docker image. Create a file named `Dockerfile` (no extension) in your `task-manager-backend` root directory.
+
+**File: `Dockerfile`**
+```dockerfile
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the dependency list
+COPY requirements.txt .
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application's code into the container
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Define the command to run your app using uvicorn
+# We use --host 0.0.0.0 to make it accessible from outside the container
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### 2. Create a `.dockerignore` File
+
+To keep your Docker image small and clean, you should exclude unnecessary files. Create a `.dockerignore` file in the same directory.
+
+**File: `.dockerignore`**
+```
+venv
+__pycache__
+*.pyc
+.env
+.git
+.vscode
+```
+
+### 3. Using Docker Compose (Recommended)
+
+Docker Compose is the standard tool for defining and running multi-container Docker applications. It uses a YAML file to configure your application's services, making it very easy to manage.
+
+Create a file named `docker-compose.yml` in your backend's root directory.
+
+**File: `docker-compose.yml`**
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: task-manager-api
+    ports:
+      # Map port 8000 on your host machine to port 8000 in the container
+      - "8000:8000"
+    env_file:
+      # This tells Docker Compose to load environment variables from the .env file
+      - .env
+    # The following volume mount is useful for development.
+    # It syncs your local code with the code inside the container,
+    # so you don't have to rebuild the image for every code change.
+    # Uvicorn's --reload flag will automatically restart the server.
+    volumes:
+      - .:/app
+```
+
+### 4. Running the Backend with Docker Compose
+
+With the `Dockerfile` and `docker-compose.yml` files in place, running your application is simple.
+
+1.  **Build and run the container:**
+    Open your terminal in the `task-manager-backend` directory and run:
+    ```bash
+    docker-compose up --build
+    ```
+    *   `--build`: This flag tells Docker Compose to build the image before starting the container. You only need it the first time or when you change the `Dockerfile` or `requirements.txt`. For subsequent runs, `docker-compose up` is sufficient.
+
+2.  **Accessing the API:**
+    Your backend is now running inside a Docker container, but it's accessible exactly as before on `http://127.0.0.1:8000` because of the `ports: - "8000:8000"` mapping. Your React frontend can continue to call this URL without any changes.
+
+3.  **Stopping the application:**
+    To stop the container, press `Ctrl+C` in the terminal where it's running. To stop and remove the container, run:
+    ```bash
+    docker-compose down
+    ```
+
+This setup gives you a professional, reproducible development environment and is the first step toward deploying your application to the cloud.
 
 ---
 
