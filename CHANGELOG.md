@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.6](https://github.com/hdfiresky/Problembuddy-deploy/compare/v0.1.5...v0.1.6) (2025-08-17)
+
+
+### Features
+
+* making image smaller ([d93a792](https://github.com/hdfiresky/Problembuddy-deploy/commit/d93a7923efc07d6dd460d27e617c74b428f4ff45))
+
 ### [0.1.5](https://github.com/hdfiresky/Problembuddy-deploy/compare/v0.1.4...v0.1.5) (2025-08-17)
 
 
