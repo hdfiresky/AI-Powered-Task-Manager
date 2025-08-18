@@ -26,8 +26,8 @@ export default defineConfig(({ mode }) => {
           "pwa-512x512.webp",
         ],
         manifest: {
-          name: "ai-powered-task-manager",
-          short_name: "Launch",
+          name: "AI Powered task manager",
+          short_name: "AI Task Manager",
           start_url: "/ai-powered-task-manager/",
           scope: "/ai-powered-task-manager/",
           display: "standalone",
